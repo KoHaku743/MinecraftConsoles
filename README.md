@@ -13,7 +13,8 @@ This project contains the source code of Minecraft Legacy Console Edition v1.6.0
 ## Platform Support
 
 - **Windows**: Supported for building and running the project
-- **macOS / Linux**: The Windows nightly build may run through Wine or CrossOver based on community reports, but this is unofficial and not currently tested by the maintainers
+- **macOS (Apple Silicon / M-chip)**: The Windows nightly build can be run using the [Apple Game Porting Toolkit](https://developer.apple.com/games/game-porting-toolkit/) — see [Running on macOS (Apple Silicon)](#running-on-macos-apple-silicon) below
+- **macOS / Linux (x86)**: The Windows nightly build may run through Wine or CrossOver based on community reports, but this is unofficial and not currently tested by the maintainers
 
 ## Features
 
@@ -76,9 +77,63 @@ cmake --build build --config Debug --target MinecraftClient
 
 For more information, see [COMPILE.md](COMPILE.md)
 
+## Running on macOS (Apple Silicon)
+
+The [Nightly Build](https://github.com/smartcmd/MinecraftConsoles/releases/tag/nightly) (Windows `.exe`) can be run on M-chip Macs using the **Apple Game Porting Toolkit (GPTK)**, which provides a DirectX-to-Metal translation layer on top of Wine.
+
+### Requirements
+
+- macOS Sonoma (14.0) or later
+- Apple Silicon Mac (M1 / M2 / M3 / M4 or newer)
+- [Xcode Command Line Tools](https://developer.apple.com/xcode/resources/) or Xcode 15+
+- [Homebrew](https://brew.sh/)
+
+### Setup
+
+1. **Install the Game Porting Toolkit via Homebrew:**
+
+   ```bash
+   brew tap apple/apple
+   brew -v install game-porting-toolkit
+   ```
+
+2. **Create a Wine prefix and configure it:**
+
+   ```bash
+   WINEPREFIX=~/gptk-prefix wine64 winecfg
+   ```
+
+   Set *Windows version* to **Windows 10** in the dialog that appears, then click **OK**.
+
+3. **Copy the GPTK DirectX runtime DLLs into the prefix:**
+
+   ```bash
+   cp "$(brew --prefix game-porting-toolkit)/lib/wine/x86_64-windows/"*.dll \
+       ~/gptk-prefix/drive_c/windows/system32/
+   ```
+
+4. **Download the nightly build** and unzip it to a convenient location, e.g. `~/MinecraftConsoles`.
+
+5. **Run the game:**
+
+   ```bash
+   cd ~/MinecraftConsoles
+   WINEPREFIX=~/gptk-prefix MTL_HUD_ENABLED=1 DIRECTX_FORCE_COMPATIBILITY=1 \
+       wine64 MinecraftClient.exe
+   ```
+
+   > `MTL_HUD_ENABLED=1` shows a Metal performance HUD overlay (optional).  
+   > `DIRECTX_FORCE_COMPATIBILITY=1` improves compatibility with D3D11 titles.
+
+### Notes
+
+- This path is **community-supported** and not officially tested by the maintainers.
+- Audio may require additional configuration. If there is no sound, try running `wine64 dxsetup.exe /silent` inside the Wine prefix after copying the DirectX DLLs (step 3), and ensure the `mss64.dll` runtime from the nightly build is present in the game directory.
+- If the game fails to start, ensure macOS is fully up-to-date and that Xcode Command Line Tools are installed (`xcode-select --install`).
+
 ## Known Issues
 
-- Native builds for platforms other than Windows have not been tested and are most likely non-functional. The Windows nightly build may still run on macOS and Linux through Wine or CrossOver, but that path is unofficial and not currently supported
+- Native builds for platforms other than Windows have not been tested and are most likely non-functional. The Windows nightly build may run on macOS (Apple Silicon) via the Apple Game Porting Toolkit, and on macOS/Linux via Wine or CrossOver, but those paths are unofficial and not currently supported by the maintainers
 
 ## Star History
 
